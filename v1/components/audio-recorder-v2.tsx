@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Download, Mic, Save, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { CreateVisitForm } from "@/components/create-visit-form";
+import { Timer } from "@/components/timer";
 
 interface Props {
   className?: string;
@@ -243,38 +245,6 @@ export const AudioRecorderWithTranscription = ({
     }
   }
 
-  const handleSaveNote = async () => {
-    if (isRecording) {
-      stopRecording();
-    }
-
-    if (!transcribedText.trim()) {
-      toast.error("Cannot save empty note");
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/notes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text: transcribedText.trim() }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save note');
-      }
-
-      await response.json();
-      toast.success("Note saved successfully");
-      setTranscribedText('');
-    } catch (error) {
-      console.error('Error saving note:', error);
-      toast.error("Failed to save note");
-    }
-  };
-
   // Effect to update the timer every second
   useEffect(() => {
     if (isRecording) {
@@ -350,9 +320,23 @@ export const AudioRecorderWithTranscription = ({
     };
   }, [isRecording]);
 
+  const handleCreateVisit = () => {
+    if (isRecording) {
+      stopRecording();
+    }
+
+    if (!transcribedText.trim()) {
+      toast.error("Cannot create visit without transcribed text");
+      return;
+    }
+
+    // Scroll to the form
+    document.querySelector('.create-visit-form')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <TooltipProvider>
-      <div className="flex flex-col items-center w-full max-w-5xl gap-4">
+      <div className="flex flex-col items-center w-full max-w-5xl gap-8">
         <div
           className={cn(
             "flex h-16 rounded-md relative w-full items-center justify-center gap-2",
@@ -417,66 +401,35 @@ export const AudioRecorderWithTranscription = ({
               </TooltipContent>
             </Tooltip>
 
-            {/* ========== Save Note button ========== */}
+            {/* ========== Create Visit button ========== */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button onClick={handleSaveNote} size={"icon"}>
+                <Button onClick={handleCreateVisit} size={"icon"}>
                   <Save size={15} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="m-2">
                 <span>
-                  {isRecording ? "Stop recording and save note" : "Save note"}
+                  {isRecording ? "Stop recording and create visit" : "Create visit"}
                 </span>
               </TooltipContent>
             </Tooltip>
           </div>
         </div>
-        <Textarea
-          value={transcribedText}
-          onChange={(e) => setTranscribedText(e.target.value)}
-          placeholder="Transcribed text will appear here..."
-          className="w-full h-40 resize-none"
-        />
+
+        <div className="w-full space-y-8">
+          <Textarea
+            value={transcribedText}
+            onChange={(e) => setTranscribedText(e.target.value)}
+            placeholder="Transcribed text will appear here..."
+            className="w-full h-40 resize-none"
+          />
+
+          <div className="create-visit-form">
+            <CreateVisitForm transcribedText={transcribedText} />
+          </div>
+        </div>
       </div>
     </TooltipProvider>
-  );
-};
-
-interface TimerProps {
-  hourLeft: string;
-  hourRight: string;
-  minuteLeft: string;
-  minuteRight: string;
-  secondLeft: string;
-  secondRight: string;
-  timerClassName?: string;
-}
-
-const Timer = ({
-  hourLeft,
-  hourRight,
-  minuteLeft,
-  minuteRight,
-  secondLeft,
-  secondRight,
-  timerClassName,
-}: TimerProps) => {
-  return (
-    <div
-      className={cn(
-        "absolute top-0 left-0 flex items-center gap-1 text-xs font-mono p-2",
-        timerClassName,
-      )}
-    >
-      <span>{hourLeft}</span>
-      <span>{hourRight}</span>
-      <span>:</span>
-      <span>{minuteLeft}</span>
-      <span>{minuteRight}</span>
-      <span>:</span>
-      <span>{secondLeft}</span>
-      <span>{secondRight}</span>
-    </div>
   );
 }; 
