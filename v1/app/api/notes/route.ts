@@ -1,27 +1,28 @@
-import { prisma } from '@/lib/prisma'
-import { NextResponse } from 'next/server'
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { text } = await request.json()
-    
-    if (!text) {
+    const { visitId, text } = await request.json();
+
+    if (!visitId || !text) {
       return NextResponse.json(
-        { error: 'Text is required' },
-        { status: 400 }
-      )
+        { error: "Visit ID and text are required" },
+        { status: 400 },
+      );
     }
 
-    const note = await prisma.note.create({
-      data: { text }
-    })
+    const updatedVisit = await prisma.visit.update({
+      where: { id: visitId },
+      data: { notes: text },
+    });
 
-    return NextResponse.json(note)
+    return NextResponse.json(updatedVisit);
   } catch (error) {
-    console.error('Error saving note:', error)
+    console.error("Error updating visit notes:", error);
     return NextResponse.json(
-      { error: 'Error saving note' },
-      { status: 500 }
-    )
+      { error: "Error updating visit notes" },
+      { status: 500 },
+    );
   }
-} 
+}

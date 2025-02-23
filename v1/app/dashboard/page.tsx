@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { AudioRecorderWithTranscription } from "@/components/audio-recorder";
 import { CreateVisitForm } from "@/components/create-visit-form";
@@ -17,7 +17,9 @@ export default function Dashboard() {
       </div>
 
       <div className="space-y-8">
-        <AudioRecorderWithTranscription onTranscriptionChange={setTranscribedText} />
+        <AudioRecorderWithTranscription
+          onTranscriptionChange={setTranscribedText}
+        />
       </div>
 
       <div className="create-visit-form">

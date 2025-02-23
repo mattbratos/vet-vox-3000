@@ -127,7 +127,7 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
       </div>
 
       {confidence !== null && (
-        <Alert variant={confidence >= 0.7 ? "default" : "warning"}>
+        <Alert variant={confidence >= 0.7 ? "default" : "destructive"}>
           <InfoIcon className="h-4 w-4" />
           <AlertTitle>AI Analysis Confidence</AlertTitle>
           <AlertDescription>

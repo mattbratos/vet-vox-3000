@@ -48,10 +48,11 @@ export function VisitsTable() {
       const data = await response.json();
       setVisits(data);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "An error occurred";
+      const message =
+        error instanceof Error ? error.message : "An error occurred";
       setError(message);
       toast.error("Failed to load visits", {
-        description: "Please try again later."
+        description: "Please try again later.",
       });
     } finally {
       setIsLoading(false);
@@ -70,7 +71,7 @@ export function VisitsTable() {
       const aValue = a[column];
       const bValue = b[column];
       const modifier = sortDirection === "asc" ? 1 : -1;
-      
+
       if (typeof aValue === "string" && typeof bValue === "string") {
         return aValue.localeCompare(bValue) * modifier;
       }
@@ -100,12 +101,14 @@ export function VisitsTable() {
       if (!response.ok) throw new Error("Failed to save notes");
 
       const updatedVisit = await response.json();
-      setVisits(visits.map(v => v.id === updatedVisit.id ? updatedVisit : v));
+      setVisits(
+        visits.map((v) => (v.id === updatedVisit.id ? updatedVisit : v)),
+      );
       setIsEditing(false);
       toast.success("Notes updated successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to save notes", {
-        description: "Please try again."
+        description: "Please try again.",
       });
     } finally {
       setIsSaving(false);
@@ -188,7 +191,9 @@ export function VisitsTable() {
                   ))}
                 </div>
               </TableCell>
-              <TableCell>{format(new Date(visit.visitDate), "MMM dd, yyyy")}</TableCell>
+              <TableCell>
+                {format(new Date(visit.visitDate), "MMM dd, yyyy")}
+              </TableCell>
               <TableCell>
                 <Button
                   variant="ghost"
@@ -204,17 +209,21 @@ export function VisitsTable() {
         </TableBody>
       </Table>
 
-      <Dialog open={selectedVisit !== null} onOpenChange={() => setSelectedVisit(null)}>
+      <Dialog
+        open={selectedVisit !== null}
+        onOpenChange={() => setSelectedVisit(null)}
+      >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Visit Notes - {selectedVisit?.patientName}
               <Badge variant="outline">
-                {selectedVisit && format(new Date(selectedVisit.visitDate), "MMM dd, yyyy")}
+                {selectedVisit &&
+                  format(new Date(selectedVisit.visitDate), "MMM dd, yyyy")}
               </Badge>
             </DialogTitle>
           </DialogHeader>
-          
+
           {isEditing ? (
             <Textarea
               value={editedNotes}
@@ -232,24 +241,19 @@ export function VisitsTable() {
           <DialogFooter className="flex gap-2">
             {isEditing ? (
               <>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsEditing(false)}
                   disabled={isSaving}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleSaveNotes}
-                  disabled={isSaving}
-                >
+                <Button onClick={handleSaveNotes} disabled={isSaving}>
                   {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </>
             ) : (
-              <Button onClick={() => setIsEditing(true)}>
-                Edit Notes
-              </Button>
+              <Button onClick={() => setIsEditing(true)}>Edit Notes</Button>
             )}
           </DialogFooter>
         </DialogContent>

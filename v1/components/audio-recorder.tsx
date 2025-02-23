@@ -1,4 +1,33 @@
-'use client';
+"use client";
+
+// Add type definitions for Web Speech API
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: Event) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
+  }
+}
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -82,7 +111,7 @@ export const AudioRecorderWithTranscription = ({
   });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<InstanceType<typeof window.SpeechRecognition> | null>(null);
 
   function startRecording() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -210,7 +239,9 @@ export const AudioRecorderWithTranscription = ({
     }
 
     // Scroll to the form
-    document.querySelector('.create-visit-form')?.scrollIntoView({ behavior: 'smooth' });
+    document
+      .querySelector(".create-visit-form")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const updateTranscribedText = (text: string) => {
@@ -240,7 +271,7 @@ export const AudioRecorderWithTranscription = ({
         }
 
         updateTranscribedText(
-          finalTranscript.trim() + " " + interimTranscript.trim()
+          finalTranscript.trim() + " " + interimTranscript.trim(),
         );
       };
 
@@ -375,8 +406,8 @@ export const AudioRecorderWithTranscription = ({
 
             {/* ========== Start recording button ========== */}
             {!isRecording ? (
-              <Button 
-                onClick={() => startRecording()} 
+              <Button
+                onClick={() => startRecording()}
                 size="lg"
                 className="h-16 w-16 rounded-full hover:scale-105 transition-transform"
               >
@@ -411,4 +442,4 @@ export const AudioRecorderWithTranscription = ({
       </div>
     </TooltipProvider>
   );
-}; 
+};

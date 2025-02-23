@@ -36,4 +36,4 @@ export function Timer({
       <span>{secondRight}</span>
     </div>
   );
-} 
+}

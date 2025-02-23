@@ -1,4 +1,4 @@
-import { Medication, PatientName, Species, VetName } from '@prisma/client';
+import { Medication, PatientName, Species, VetName } from "@prisma/client";
 
 export interface VisitAnalysis {
   vetName: VetName;
@@ -10,22 +10,27 @@ export interface VisitAnalysis {
 }
 
 export class AnalysisError extends Error {
-  constructor(message: string, public cause?: unknown) {
+  constructor(
+    message: string,
+    public cause?: unknown,
+  ) {
     super(message);
-    this.name = 'AnalysisError';
+    this.name = "AnalysisError";
   }
 }
 
-export async function analyzeTranscribedNotes(transcribedText: string): Promise<VisitAnalysis> {
+export async function analyzeTranscribedNotes(
+  transcribedText: string,
+): Promise<VisitAnalysis> {
   if (!transcribedText?.trim()) {
-    throw new AnalysisError('Transcribed notes cannot be empty');
+    throw new AnalysisError("Transcribed notes cannot be empty");
   }
 
   try {
-    const response = await fetch('/api/visits/analyze', {
-      method: 'POST',
+    const response = await fetch("/api/visits/analyze", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ transcribedNotes: transcribedText }),
     });
@@ -34,7 +39,7 @@ export async function analyzeTranscribedNotes(transcribedText: string): Promise<
       const data = await response.json();
       throw new AnalysisError(
         data.error || `Failed to analyze notes: ${response.statusText}`,
-        { status: response.status, data }
+        { status: response.status, data },
       );
     }
 
@@ -44,6 +49,6 @@ export async function analyzeTranscribedNotes(transcribedText: string): Promise<
     if (error instanceof AnalysisError) {
       throw error;
     }
-    throw new AnalysisError('Failed to analyze notes', error);
+    throw new AnalysisError("Failed to analyze notes", error);
   }
-} 
+}

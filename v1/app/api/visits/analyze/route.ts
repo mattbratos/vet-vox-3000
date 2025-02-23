@@ -1,7 +1,7 @@
-import { OpenAI } from 'openai';
-import { z } from 'zod';
-import { Medication, PatientName, Species, VetName } from '@prisma/client';
-import { NextResponse } from 'next/server';
+import { OpenAI } from "openai";
+import { z } from "zod";
+import { Medication, PatientName, Species, VetName } from "@prisma/client";
+import { NextResponse } from "next/server";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,44 +10,44 @@ const openai = new OpenAI({
 // Define the schema for the visit analysis
 const VisitAnalysisSchema = z.object({
   vetName: z.enum([
-    'DR_SMITH',
-    'DR_JOHNSON',
-    'DR_WILLIAMS',
-    'DR_BROWN',
-    'DR_DAVIS',
-    'UNKNOWN'
+    "DR_SMITH",
+    "DR_JOHNSON",
+    "DR_WILLIAMS",
+    "DR_BROWN",
+    "DR_DAVIS",
+    "UNKNOWN",
   ] as const),
   patientName: z.enum([
-    'MAX',
-    'BELLA',
-    'CHARLIE',
-    'LUNA',
-    'ROCKY',
-    'UNKNOWN'
+    "MAX",
+    "BELLA",
+    "CHARLIE",
+    "LUNA",
+    "ROCKY",
+    "UNKNOWN",
   ] as const),
   species: z.enum([
-    'DOG',
-    'CAT',
-    'COW',
-    'CHICKEN',
-    'MONKEY',
-    'UNKNOWN'
+    "DOG",
+    "CAT",
+    "COW",
+    "CHICKEN",
+    "MONKEY",
+    "UNKNOWN",
   ] as const),
-  medications: z.array(z.enum([
-    'PARACETAMOL',
-    'AMOXICILLIN',
-    'IBUPROFEN',
-    'KETAMINE',
-    'FENTANYL',
-    'LSD',
-    'UNKNOWN',
-    'NONE'
-  ] as const)),
+  medications: z.array(
+    z.enum([
+      "PARACETAMOL",
+      "AMOXICILLIN",
+      "IBUPROFEN",
+      "KETAMINE",
+      "FENTANYL",
+      "LSD",
+      "UNKNOWN",
+      "NONE",
+    ] as const),
+  ),
   notes: z.string(),
   confidence: z.number().min(0).max(1),
 });
-
-type VisitAnalysis = z.infer<typeof VisitAnalysisSchema>;
 
 export async function POST(request: Request) {
   try {
@@ -55,8 +55,8 @@ export async function POST(request: Request) {
 
     if (!transcribedNotes) {
       return NextResponse.json(
-        { error: 'Transcribed notes are required' },
-        { status: 400 }
+        { error: "Transcribed notes are required" },
+        { status: 400 },
       );
     }
 
@@ -78,29 +78,29 @@ export async function POST(request: Request) {
           Provide a confidence score between 0 and 1 for your analysis.
           
           Format your response as a JSON object with the following fields:
-          - vetName: One of ${Object.values(VetName).join(', ')}
-          - patientName: One of ${Object.values(PatientName).join(', ')}
-          - species: One of ${Object.values(Species).join(', ')}
-          - medications: Array of ${Object.values(Medication).join(', ')}
+          - vetName: One of ${Object.values(VetName).join(", ")}
+          - patientName: One of ${Object.values(PatientName).join(", ")}
+          - species: One of ${Object.values(Species).join(", ")}
+          - medications: Array of ${Object.values(Medication).join(", ")}
           - notes: string
-          - confidence: number between 0 and 1`
+          - confidence: number between 0 and 1`,
         },
         {
           role: "user",
-          content: transcribedNotes
-        }
+          content: transcribedNotes,
+        },
       ],
-      response_format: { 
-        type: "json_object"
-      }
+      response_format: {
+        type: "json_object",
+      },
     });
 
     const analysis = completion.choices[0].message.content;
-    
+
     if (!analysis) {
       return NextResponse.json(
-        { error: 'Failed to analyze notes' },
-        { status: 500 }
+        { error: "Failed to analyze notes" },
+        { status: 500 },
       );
     }
 
@@ -108,14 +108,11 @@ export async function POST(request: Request) {
     const validatedAnalysis = VisitAnalysisSchema.parse(parsedAnalysis);
 
     return NextResponse.json(validatedAnalysis);
-    
   } catch (error) {
-    console.error('Error analyzing notes:', error);
+    console.error("Error analyzing notes:", error);
     return NextResponse.json(
-      { error: 'Failed to analyze notes' },
-      { status: 500 }
+      { error: "Failed to analyze notes" },
+      { status: 500 },
     );
   }
-} 
-
-
+}
