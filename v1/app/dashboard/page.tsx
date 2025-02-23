@@ -1,4 +1,4 @@
-import { AudioRecorderWithTranscription } from "@/components/audio-recorder";
+import { AudioRecorderWithTranscription } from "@/components/audio-recorder-v2";
 
 export default function Dashboard() {
   return (

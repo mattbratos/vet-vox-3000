@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import { Mic, Settings, Stethoscope } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import {
@@ -16,30 +16,20 @@ import {
 // Menu items.
 const items = [
   {
-    title: "Home",
-    url: "#",
-    icon: Home,
+    title: "Record",
+    url: "/dashboard",
+    icon: Mic,
   },
   {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
+    title: "Visits",
+    url: "/dashboard/visits",
+    icon: Stethoscope,
   },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
+  // {
+  //   title: "Settings",
+  //   url: "/settings",
+  //   icon: Settings,
+  // },
 ];
 
 export function AppSidebar() {

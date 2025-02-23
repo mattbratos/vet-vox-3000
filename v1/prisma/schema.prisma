@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PatientName {
+  MAX
+  BELLA
+  CHARLIE
+  LUNA
+  ROCKY
+}
+
+enum VetName {
+  DR_SMITH
+  DR_JOHNSON
+  DR_WILLIAMS
+  DR_BROWN
+  DR_DAVIS
+}
+
+enum Species {
+  DOG
+  CAT
+  COW
+  CHICKEN
+  MONKEY
+}
+
+enum Medication {
+  PARACETAMOL
+  AMOXICILLIN
+  IBUPROFEN
+  KETAMINE
+  FENTANYL
+  LSD
+}
+
+model Visit {
+  id           String      @id @default(cuid())
+  vetName      VetName     
+  patientName  PatientName 
+  species      Species     
+  medications  Medication[] 
+  visitDate    DateTime    @default(now()) 
+  notes        String     
+  createdAt    DateTime    @default(now()) 
+  updatedAt    DateTime    @updatedAt      
+}
+
+
+

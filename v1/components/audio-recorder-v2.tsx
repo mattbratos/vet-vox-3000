@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Tooltip,
@@ -9,31 +10,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Download, Mic, Save, Trash } from "lucide-react";
-import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-type Props = {
+interface Props {
   className?: string;
   timerClassName?: string;
-};
+}
 
-type Record = {
+interface Record {
   id: number;
   name: string;
-  file: any;
-};
+  file: Blob | null;
+}
 
 let recorder: MediaRecorder;
 let recordingChunks: BlobPart[] = [];
 let timerTimeout: NodeJS.Timeout;
 
-// Utility function to pad a number with leading zeros
 const padWithLeadingZeros = (num: number, length: number): string => {
   return String(num).padStart(length, "0");
 };
 
-// Utility function to download a blob
 const downloadBlob = (blob: Blob) => {
   const downloadLink = document.createElement("a");
   downloadLink.href = URL.createObjectURL(blob);
@@ -47,11 +45,8 @@ export const AudioRecorderWithTranscription = ({
   className,
   timerClassName,
 }: Props) => {
-  const { theme } = useTheme();
   // States
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [isRecordingFinished, setIsRecordingFinished] =
-    useState<boolean>(false);
   const [timer, setTimer] = useState<number>(0);
   const [currentRecord, setCurrentRecord] = useState<Record>({
     id: -1,
@@ -78,6 +73,7 @@ export const AudioRecorderWithTranscription = ({
     () => padWithLeadingZeros(seconds, 2).split(""),
     [seconds],
   );
+
   // Refs
   const mediaRecorderRef = useRef<{
     stream: MediaStream | null;
@@ -95,8 +91,6 @@ export const AudioRecorderWithTranscription = ({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   function startRecording() {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
         .getUserMedia({
@@ -141,8 +135,8 @@ export const AudioRecorderWithTranscription = ({
           startSpeechRecognition();
         })
         .catch((error) => {
-          alert(error);
-          console.log(error);
+          console.error(error);
+          toast.error("Error accessing microphone");
         });
     }
   }
@@ -154,15 +148,13 @@ export const AudioRecorderWithTranscription = ({
       });
       setCurrentRecord({
         ...currentRecord,
-        file: window.URL.createObjectURL(recordBlob),
+        file: recordBlob,
       });
       recordingChunks = [];
     };
 
     recorder.stop();
-
     setIsRecording(false);
-    setIsRecordingFinished(true);
     setTimer(0);
     clearTimeout(timerTimeout);
 
@@ -181,11 +173,8 @@ export const AudioRecorderWithTranscription = ({
         recordingChunks = [];
       };
       mediaRecorder.stop();
-    } else {
-      alert("recorder instance is null!");
     }
 
-    // Stop the web audio context and the analyser node
     if (analyser) {
       analyser.disconnect();
     }
@@ -196,12 +185,10 @@ export const AudioRecorderWithTranscription = ({
       audioContext.close();
     }
     setIsRecording(false);
-    setIsRecordingFinished(true);
     setTimer(0);
     clearTimeout(timerTimeout);
 
-    // Clear the animation frame and canvas
-    cancelAnimationFrame(animationRef.current || 0);
+    cancelAnimationFrame(animationRef.current);
     const canvas = canvasRef.current;
     if (canvas) {
       const canvasCtx = canvas.getContext("2d");
@@ -212,7 +199,6 @@ export const AudioRecorderWithTranscription = ({
       }
     }
 
-    // Stop speech recognition and clear transcribed text
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
@@ -225,10 +211,10 @@ export const AudioRecorderWithTranscription = ({
   };
 
   function startSpeechRecognition() {
-    const SpeechRecognition =
+    const SpeechRecognitionAPI =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
+    if (SpeechRecognitionAPI) {
+      recognitionRef.current = new SpeechRecognitionAPI();
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
 
@@ -253,6 +239,7 @@ export const AudioRecorderWithTranscription = ({
       recognitionRef.current.start();
     } else {
       console.error("Speech recognition not supported in this browser.");
+      toast.error("Speech recognition not supported in this browser");
     }
   }
 
@@ -338,7 +325,7 @@ export const AudioRecorderWithTranscription = ({
 
       const draw = () => {
         if (!isRecording) {
-          cancelAnimationFrame(animationRef.current || 0);
+          cancelAnimationFrame(animationRef.current);
           return;
         }
         animationRef.current = requestAnimationFrame(draw);
@@ -355,11 +342,11 @@ export const AudioRecorderWithTranscription = ({
       if (canvasCtx) {
         canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
       }
-      cancelAnimationFrame(animationRef.current || 0);
+      cancelAnimationFrame(animationRef.current);
     }
 
     return () => {
-      cancelAnimationFrame(animationRef.current || 0);
+      cancelAnimationFrame(animationRef.current);
     };
   }, [isRecording]);
 
@@ -376,7 +363,7 @@ export const AudioRecorderWithTranscription = ({
             className,
           )}
         >
-          {isRecording ? (
+          {isRecording && (
             <Timer
               hourLeft={hourLeft}
               hourRight={hourRight}
@@ -386,7 +373,7 @@ export const AudioRecorderWithTranscription = ({
               secondRight={secondRight}
               timerClassName={timerClassName}
             />
-          ) : null}
+          )}
           <canvas
             ref={canvasRef}
             className={`h-full w-full bg-background ${!isRecording ? "hidden" : "flex"}`}
@@ -456,53 +443,40 @@ export const AudioRecorderWithTranscription = ({
   );
 };
 
-const Timer = React.memo(
-  ({
-    hourLeft,
-    hourRight,
-    minuteLeft,
-    minuteRight,
-    secondLeft,
-    secondRight,
-    timerClassName,
-  }: {
-    hourLeft: string;
-    hourRight: string;
-    minuteLeft: string;
-    minuteRight: string;
-    secondLeft: string;
-    secondRight: string;
-    timerClassName?: string;
-  }) => {
-    return (
-      <div
-        className={cn(
-          "items-center -top-12 left-0 absolute justify-left gap-0.5 border p-1.5 rounded-md font-mono font-medium text-foreground flex",
-          timerClassName,
-        )}
-      >
-        <span className="rounded-md bg-background p-0.5 text-foreground">
-          {hourLeft}
-        </span>
-        <span className="rounded-md bg-background p-0.5 text-foreground">
-          {hourRight}
-        </span>
-        <span>:</span>
-        <span className="rounded-md bg-background p-0.5 text-foreground">
-          {minuteLeft}
-        </span>
-        <span className="rounded-md bg-background p-0.5 text-foreground">
-          {minuteRight}
-        </span>
-        <span>:</span>
-        <span className="rounded-md bg-background p-0.5 text-foreground">
-          {secondLeft}
-        </span>
-        <span className="rounded-md bg-background p-0.5 text-foreground ">
-          {secondRight}
-        </span>
-      </div>
-    );
-  },
-);
-Timer.displayName = "Timer";
+interface TimerProps {
+  hourLeft: string;
+  hourRight: string;
+  minuteLeft: string;
+  minuteRight: string;
+  secondLeft: string;
+  secondRight: string;
+  timerClassName?: string;
+}
+
+const Timer = ({
+  hourLeft,
+  hourRight,
+  minuteLeft,
+  minuteRight,
+  secondLeft,
+  secondRight,
+  timerClassName,
+}: TimerProps) => {
+  return (
+    <div
+      className={cn(
+        "absolute top-0 left-0 flex items-center gap-1 text-xs font-mono p-2",
+        timerClassName,
+      )}
+    >
+      <span>{hourLeft}</span>
+      <span>{hourRight}</span>
+      <span>:</span>
+      <span>{minuteLeft}</span>
+      <span>{minuteRight}</span>
+      <span>:</span>
+      <span>{secondLeft}</span>
+      <span>{secondRight}</span>
+    </div>
+  );
+}; 
