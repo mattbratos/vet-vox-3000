@@ -1,4 +1,4 @@
-import { Mic, Settings, Stethoscope } from "lucide-react";
+import { Mic, Stethoscope } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import {
@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarHeader,
 } from "@/components/ui/sidebar";
 
 // Menu items.
@@ -35,6 +36,11 @@ const items = [
 export function AppSidebar() {
   return (
     <Sidebar>
+      <SidebarHeader>
+        <h2 className="font-mono text-3xl font-bold py-2 text-primary">
+          VetVox3000
+        </h2>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>

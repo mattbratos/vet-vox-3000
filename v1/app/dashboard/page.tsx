@@ -1,9 +1,12 @@
-import { AudioRecorderWithTranscription } from "@/components/audio-recorder-v2";
+'use client';
+
+import { AudioRecorderWithTranscription } from "@/components/audio-recorder";
 import { CreateVisitForm } from "@/components/create-visit-form";
+import { useState } from "react";
 
 export default function Dashboard() {
-  const transcribedText =
-    "so my name is DR_BROWN and today I was operating Bella she's a chicken and I gave her LSD";
+  const [transcribedText, setTranscribedText] = useState("");
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       <div className="space-y-3">
@@ -14,7 +17,7 @@ export default function Dashboard() {
       </div>
 
       <div className="space-y-8">
-        <AudioRecorderWithTranscription />
+        <AudioRecorderWithTranscription onTranscriptionChange={setTranscribedText} />
       </div>
 
       <div className="create-visit-form">

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -7,7 +9,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider suppressHydrationWarning>
       <AppSidebar />
       <SidebarInset>
         {/* Header */}
