@@ -13,6 +13,7 @@ enum PatientName {
   CHARLIE
   LUNA
   ROCKY
+  UNKNOWN
 }
 
 enum VetName {
@@ -21,6 +22,7 @@ enum VetName {
   DR_WILLIAMS
   DR_BROWN
   DR_DAVIS
+  UNKNOWN
 }
 
 enum Species {
@@ -29,6 +31,7 @@ enum Species {
   COW
   CHICKEN
   MONKEY
+  UNKNOWN
 }
 
 enum Medication {
@@ -38,6 +41,8 @@ enum Medication {
   KETAMINE
   FENTANYL
   LSD
+  UNKNOWN
+  NONE
 }
 
 model Visit {

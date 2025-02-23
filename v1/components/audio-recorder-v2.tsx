@@ -425,9 +425,7 @@ export const AudioRecorderWithTranscription = ({
             className="w-full h-40 resize-none"
           />
 
-          <div className="create-visit-form">
-            <CreateVisitForm transcribedText={transcribedText} />
-          </div>
+         
         </div>
       </div>
     </TooltipProvider>

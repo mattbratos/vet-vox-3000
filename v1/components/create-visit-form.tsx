@@ -13,6 +13,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { VetName, PatientName, Species, Medication } from "@prisma/client";
+import { analyzeTranscribedNotes, AnalysisError } from "@/lib/analyze-notes";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 interface CreateVisitFormProps {
   transcribedText: string;
@@ -25,6 +28,7 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
   const [species, setSpecies] = useState<Species | "">("");
   const [medications, setMedications] = useState<Medication[]>([]);
   const [notes, setNotes] = useState(transcribedText);
+  const [confidence, setConfidence] = useState<number | null>(null);
 
   const handleCreateVisit = async () => {
     if (!vetName || !patientName || !species) {
@@ -46,7 +50,10 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to create visit");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create visit");
+      }
 
       toast.success("Visit created successfully");
       // Reset form
@@ -55,9 +62,11 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
       setSpecies("");
       setMedications([]);
       setNotes("");
-    } catch (error) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Please try again.";
       toast.error("Failed to create visit", {
-        description: "Please try again.",
+        description: message,
       });
     } finally {
       setIsLoading(false);
@@ -65,27 +74,39 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
   };
 
   const handleAnalyzeWithAI = async () => {
+    if (!transcribedText.trim()) {
+      toast.error("Please provide some text to analyze");
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await fetch("/api/visits/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: transcribedText }),
-      });
+      const analysis = await analyzeTranscribedNotes(transcribedText);
 
-      if (!response.ok) throw new Error("Failed to analyze text");
-
-      const data = await response.json();
-      setVetName(data.vetName);
-      setPatientName(data.patientName);
-      setSpecies(data.species);
-      setMedications(data.medications);
-      setNotes(data.notes);
+      setVetName(analysis.vetName);
+      setPatientName(analysis.patientName);
+      setSpecies(analysis.species);
+      setMedications(analysis.medications);
+      setNotes(analysis.notes);
+      setConfidence(analysis.confidence);
 
       toast.success("Text analyzed successfully");
-    } catch (error) {
+
+      if (analysis.confidence < 0.7) {
+        toast.warning("Low confidence in analysis", {
+          description: "Please review and correct the fields as needed.",
+        });
+      }
+    } catch (error: unknown) {
+      console.error("Analysis error:", error);
+
+      const message =
+        error instanceof AnalysisError
+          ? error.message
+          : "Please fill in the fields manually.";
+
       toast.error("Failed to analyze text", {
-        description: "Please fill in the fields manually.",
+        description: message,
       });
     } finally {
       setIsLoading(false);
@@ -96,15 +117,35 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
     <div className="space-y-6 border rounded-lg p-6">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Create New Visit</h2>
-        <Button onClick={handleAnalyzeWithAI} disabled={isLoading || !transcribedText}>
-          Analyze with AI
+        <Button
+          onClick={handleAnalyzeWithAI}
+          disabled={isLoading || !transcribedText}
+          className="relative"
+        >
+          {isLoading ? "Analyzing..." : "Analyze with AI"}
         </Button>
       </div>
+
+      {confidence !== null && (
+        <Alert variant={confidence >= 0.7 ? "default" : "warning"}>
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>AI Analysis Confidence</AlertTitle>
+          <AlertDescription>
+            {confidence >= 0.7
+              ? "High confidence in the analysis results."
+              : "Low confidence in some fields. Please review the analysis carefully."}{" "}
+            (Score: {Math.round(confidence * 100)}%)
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-4">
         <div className="grid gap-2">
           <Label htmlFor="vet">Veterinarian</Label>
-          <Select value={vetName} onValueChange={(value) => setVetName(value as VetName)}>
+          <Select
+            value={vetName}
+            onValueChange={(value) => setVetName(value as VetName)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select veterinarian" />
             </SelectTrigger>
@@ -120,7 +161,10 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
 
         <div className="grid gap-2">
           <Label htmlFor="patient">Patient</Label>
-          <Select value={patientName} onValueChange={(value) => setPatientName(value as PatientName)}>
+          <Select
+            value={patientName}
+            onValueChange={(value) => setPatientName(value as PatientName)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select patient" />
             </SelectTrigger>
@@ -136,7 +180,10 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
 
         <div className="grid gap-2">
           <Label htmlFor="species">Species</Label>
-          <Select value={species} onValueChange={(value) => setSpecies(value as Species)}>
+          <Select
+            value={species}
+            onValueChange={(value) => setSpecies(value as Species)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select species" />
             </SelectTrigger>
@@ -179,10 +226,14 @@ export function CreateVisitForm({ transcribedText }: CreateVisitFormProps) {
           />
         </div>
 
-        <Button onClick={handleCreateVisit} disabled={isLoading} className="w-full">
+        <Button
+          onClick={handleCreateVisit}
+          disabled={isLoading}
+          className="w-full"
+        >
           {isLoading ? "Creating..." : "Create Visit"}
         </Button>
       </div>
     </div>
   );
-} 
+}
